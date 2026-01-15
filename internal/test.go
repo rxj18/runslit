@@ -15,7 +15,7 @@ func RunTest() {
 	printBanner()
 
 	// Check if ./slit directory exists
-	slitDir := "/Users/rituraj.paul/razorpay/nbplus/slit"
+	slitDir := "./slit"
 	if _, err := os.Stat(slitDir); os.IsNotExist(err) {
 		fatal("./slit directory not found in current directory")
 	}
