@@ -43,9 +43,9 @@ var configMenu = []menuItem{
 		setter: func(c *Config, v string) error { c.MockGWImage = v; return nil },
 	},
 	{
-		label:  "TTL (e.g. 12h, 24h)",
+		label:  "TTL in hours (e.g. 12)",
 		getter: func(c *Config) string { return c.ttl() },
-		setter: func(c *Config, v string) error { c.TTL = v; return nil },
+		setter: setTTL,
 	},
 }
 
@@ -134,6 +134,15 @@ func setKubePath(cfg *Config, val string) error {
 		fmt.Printf("%s↳ no helmfile/charts directory found, continuing anyway%s\n", Yellow, Reset)
 	}
 	cfg.KubeManifestsPath = abs
+	return nil
+}
+
+func setTTL(cfg *Config, v string) error {
+	n := 0
+	if _, err := fmt.Sscanf(v, "%d", &n); err != nil || n <= 0 {
+		return fmt.Errorf("enter a positive number of hours (e.g. 12)")
+	}
+	cfg.TTL = fmt.Sprintf("%dh", n)
 	return nil
 }
 
