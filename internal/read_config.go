@@ -13,7 +13,15 @@ type Config struct {
 	DevstackLabel     string `json:"devstack_label,omitempty"`
 	NBPlusImage       string `json:"nbplus_image,omitempty"`
 	MockGWImage       string `json:"mockgw_image,omitempty"`
+	TTL               string `json:"ttl,omitempty"`
 	LastTest          string `json:"last_test,omitempty"`
+}
+
+func (c *Config) ttl() string {
+	if c.TTL != "" {
+		return c.TTL
+	}
+	return "12h"
 }
 
 var (

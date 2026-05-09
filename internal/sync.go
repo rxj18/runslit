@@ -33,13 +33,14 @@ func Sync() {
 	}
 
 	label := cfg.DevstackLabel
+	ttl := cfg.ttl()
 
 	for _, rel := range releases {
 		switch rel {
 		case releaseNBPlus:
 			img := cfg.NBPlusImage
 			if img == "" {
-				fatal("payments-nbplus image not set — run 'runslit config' or pass --image <sha>")
+				fatal("payments-nbplus image not set — run 'runslit config'")
 			}
 			info(fmt.Sprintf("Deploying %s-%s", rel, label))
 			err = runCommand(".",
@@ -51,6 +52,7 @@ func Sync() {
 				"--set", "payments_nbplus_live_app_env=slit",
 				"--set", "payments_nbplus_test_app_env=slit",
 				"--set", "image="+img,
+				"--set", "ttl="+ttl,
 				"--set", "create_pg_ledger_acknowledgment_worker=false",
 				"--set", "create_outbox_relay_worker=false",
 				"--set", "create_sqs_recon_worker=false",
@@ -76,6 +78,7 @@ func Sync() {
 				"--namespace", MockGWNamespace,
 				"--set", "devstack_label="+label,
 				"--set", "image="+img,
+				"--set", "ttl="+ttl,
 				"--wait",
 				"--timeout", "200s",
 			)

@@ -40,6 +40,7 @@ func ShowStatus() {
 	fmt.Printf("%sImages:%s\n", Blue, Reset)
 	printImage("payments-nbplus", cfg.NBPlusImage)
 	printImage("mock-go        ", cfg.MockGWImage)
+	fmt.Printf("  TTL:             %s\n", cfg.ttl())
 }
 
 func printImage(name, image string) {

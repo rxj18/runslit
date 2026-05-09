@@ -42,6 +42,11 @@ var configMenu = []menuItem{
 		getter: func(c *Config) string { return c.MockGWImage },
 		setter: func(c *Config, v string) error { c.MockGWImage = v; return nil },
 	},
+	{
+		label:  "TTL (e.g. 12h, 24h)",
+		getter: func(c *Config) string { return c.ttl() },
+		setter: func(c *Config, v string) error { c.TTL = v; return nil },
+	},
 }
 
 func Configure() {
