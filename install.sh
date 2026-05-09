@@ -85,23 +85,22 @@ if [ -f "go.mod" ] && grep -q "runslit" go.mod 2>/dev/null; then
     BUILD_DIR="."
 else
     echo -e "${YELLOW}→ Cloning repository...${NC}"
-    if ! git clone --depth 1 "$REPO_URL" "$TMP_DIR/runslit"; then
+    if ! git clone --depth 1 "$REPO_URL" "$TMP_DIR/src"; then
         echo -e "${RED}✗ Failed to clone repository${NC}"
         exit 1
     fi
-    BUILD_DIR="$TMP_DIR/runslit"
+    BUILD_DIR="$TMP_DIR/src"
 fi
 
-BUILT_BINARY="$TMP_DIR/${BINARY_NAME}-bin"
-
 echo -e "${YELLOW}→ Building...${NC}"
-if ! go build -C "$BUILD_DIR" -o "$BUILT_BINARY" .; then
+cd "$BUILD_DIR"
+if ! go build -o "$TMP_DIR/$BINARY_NAME" .; then
     echo -e "${RED}✗ Build failed${NC}"
     exit 1
 fi
 
 mkdir -p "$INSTALL_DIR"
-cp "$BUILT_BINARY" "$INSTALL_DIR/$BINARY_NAME"
+cp "$TMP_DIR/$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
 chmod +x "$INSTALL_DIR/$BINARY_NAME"
 
 echo ""
