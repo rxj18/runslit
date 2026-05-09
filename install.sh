@@ -92,15 +92,16 @@ else
     BUILD_DIR="$TMP_DIR/runslit"
 fi
 
+BUILT_BINARY="$TMP_DIR/${BINARY_NAME}-bin"
+
 echo -e "${YELLOW}→ Building...${NC}"
-cd "$BUILD_DIR"
-if ! go build -o "./$BINARY_NAME" .; then
+if ! go build -C "$BUILD_DIR" -o "$BUILT_BINARY" .; then
     echo -e "${RED}✗ Build failed${NC}"
     exit 1
 fi
 
 mkdir -p "$INSTALL_DIR"
-cp "./$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
+cp "$BUILT_BINARY" "$INSTALL_DIR/$BINARY_NAME"
 chmod +x "$INSTALL_DIR/$BINARY_NAME"
 
 echo ""
