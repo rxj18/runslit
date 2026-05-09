@@ -1,39 +1,31 @@
-# Runslit
+# runslit
 
-A CLI utility for managing SLIT (Service Level Integration Testing) environments with Helmfile.
+A CLI tool for managing SLIT (Service Level Integration Testing) environments. Deploys `payments-nbplus` and `mock-go` releases directly via `helm`, and provides an interactive test runner for the `./slit` directory.
 
-## Features
+## Prerequisites
 
-- 🚀 Easy SLIT environment initialization
-- 🔧 Helmfile-based deployment management
-- 🧪 Interactive test runner with fzf
-- 📦 Zero external dependencies (except Go)
-- 🎯 Devstack label management
+- Go 1.21+ (for building from source)
+- [helm](https://helm.sh/docs/intro/install/)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) configured with cluster access
+- [fzf](https://github.com/junegunn/fzf) (for `runslit test`)
 
 ## Installation
 
-### Quick Install (Recommended)
+### Quick install
 
 ```bash
-curl -fsSL https://gist.githubusercontent.com/rxj18/9225f1112813c7f8b50c13026ddc3664/raw/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/rxj18/runslit/main/install.sh | bash
 ```
 
-> **Note:** 
-> - The installation script will automatically clone the repository, build, and install
-> - `fzf` will be automatically installed if it's not already present on your system
-> - Temporary files are cleaned up automatically
+The script checks for `helm` and `fzf`, clones the repo, builds the binary, and installs it to `~/.local/bin`.
 
-### Manual Installation
-
-#### Option 1: Using the install script (from repository)
+### Custom install directory
 
 ```bash
-git clone https://github.com/rxj18/runslit.git
-cd runslit
-./install.sh
+INSTALL_DIR=/usr/local/bin curl -fsSL https://raw.githubusercontent.com/rxj18/runslit/main/install.sh | bash
 ```
 
-#### Option 2: Using Make
+### From source
 
 ```bash
 git clone https://github.com/rxj18/runslit.git
@@ -41,189 +33,95 @@ cd runslit
 make install
 ```
 
-#### Option 3: Using Go
+### Via Go
 
 ```bash
 go install github.com/rxj18/runslit@latest
 ```
 
-#### Option 4: Build from source
+## Usage
 
-```bash
-git clone https://github.com/rxj18/runslit.git
-cd runslit
-go build -o runslit .
-mkdir -p ~/.local/bin
-mv runslit ~/.local/bin/
-export PATH="$PATH:$HOME/.local/bin"  # Add to your shell profile
-```
-
-### Custom Installation Directory
-
-The default installation directory is `~/.local/bin`. To install to a different location:
-
-```bash
-# Install to /usr/local/bin
-INSTALL_DIR=/usr/local/bin ./install.sh
-
-# Or with Make
-make install INSTALL_DIR=/usr/local/bin
-```
-
-## Prerequisites
-
-- Go 1.21+ (for building)
-- Helmfile (for deployment)
-- kubectl (configured with cluster access)
-- fzf (for interactive test selection) - **automatically installed by install script**
-
-## Quick Start
-
-### 1. Configure kube-manifests path
+### 1. Configure
 
 ```bash
 runslit config
 ```
 
-### 2. Initialize SLIT environment
+Interactive menu to set:
+- `kube-manifests path` — local path to your kube-manifests repo
+- `devstack label` — your personal label (e.g. `rituraj`, `pr-123`)
+- `payments-nbplus image SHA`
+- `mock-go image SHA`
 
-```bash
-runslit init
-```
+Configuration is saved to `~/.runslit.config`.
 
-Select your environment (stage/slit) and provide a devstack label.
-
-### 3. Deploy your environment
+### 2. Deploy
 
 ```bash
 runslit sync
 ```
 
-### 4. Run tests
+Select which releases to deploy (payments-nbplus, mock-go, or both) and runslit runs `helm upgrade --install` for each.
+
+### 3. Run tests
 
 ```bash
 runslit test
 ```
 
-### 5. Check status
+Scans `./slit` for testify suite test cases, opens fzf for selection, and runs the chosen test with `DEVSTACK_LABEL` set. The last-run test is pre-selected on next invocation.
+
+### 4. Check status
 
 ```bash
 runslit status
 ```
 
-### 6. Destroy environment
+### 5. Destroy
 
 ```bash
 runslit delete
 ```
 
+Select which releases to uninstall.
+
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `config` | Set/update kube-manifests path |
-| `init` | Initialize SLIT environment |
-| `sync` | Deploy/sync the SLIT helmfile |
-| `test` | Select and run tests interactively |
+| `config` | Configure runslit interactively |
+| `sync` | Deploy selected releases via helm |
+| `delete` | Destroy selected releases via helm |
 | `status` | Show current configuration |
-| `delete` | Destroy the SLIT deployment |
-| `help` | Show help message |
+| `test` | Select and run a test from `./slit` |
+| `help` | Show help |
 
-## Configuration
-
-Configuration is stored in `~/.runslit.config` as JSON:
+## Configuration file
 
 ```json
 {
   "kube_manifests_path": "/path/to/kube-manifests",
-  "runslit_install_dir": "/Users/you/.runslit",
-  "slit_env": "slit",
-  "devstack_label": "your-label"
+  "devstack_label": "your-label",
+  "nbplus_image": "abc123...",
+  "mockgw_image": "def456..."
 }
 ```
 
-## Test Runner
-
-The `runslit test` command provides an interactive test runner:
-
-1. Scans `./slit` directory for test files
-2. Extracts test suites and test cases using Go AST
-3. Presents tests in fzf for selection
-4. Runs selected test with `DEVSTACK_LABEL` environment variable
-
-**Example:**
-```
-TestNetBankingPayment -> TestVerifySuccess | ./slit/netbanking
-```
-
-Runs: `DEVSTACK_LABEL=your-label go test -v -run TestNetBankingPayment/TestVerifySuccess ./slit/netbanking`
-
-## Uninstallation
+## Uninstall
 
 ```bash
-# Using Make
 make uninstall
 
-# Or manually
+# or manually
 rm ~/.local/bin/runslit
 rm ~/.runslit.config
-rm -rf ~/.runslit  # Optional: remove installation directory
 ```
 
 ## Development
 
-### Build
-
 ```bash
-make build
+make build       # build binary
+make install     # build and install
+make clean       # remove build artifacts
+go run main.go   # run locally
 ```
-
-### Run locally
-
-```bash
-go run main.go <command>
-```
-
-### Clean
-
-```bash
-make clean
-```
-
-## Troubleshooting
-
-### Command not found after installation
-
-Make sure `~/.local/bin` is in your PATH:
-
-```bash
-echo $PATH | grep "$HOME/.local/bin"
-```
-
-If not, add it to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.):
-
-```bash
-export PATH="$PATH:$HOME/.local/bin"
-```
-
-Then reload your shell:
-
-```bash
-source ~/.bashrc  # or ~/.zshrc
-```
-
-### Permission denied
-
-The install script may need sudo access. Run:
-
-```bash
-sudo ./install.sh
-```
-
-## License
-
-MIT
-
-## Contributing
-
-Contributions are welcome! Please open an issue or submit a pull request.
