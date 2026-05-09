@@ -1,14 +1,13 @@
 package internal
 
-import (
-	"fmt"
-	"os"
-	"os/exec"
-	"path/filepath"
+import "fmt"
+
+const (
+	releaseNBPlus = "payments-nbplus"
+	releaseMockGW = "mock-go"
 )
 
 func Sync() {
-	printBanner()
 
 	kubePath, err := checkKubePath()
 	if err != nil {
@@ -20,39 +19,73 @@ func Sync() {
 		fatal(err.Error())
 	}
 
-	helmfilePath := getHelmfilePath(kubePath)
-	helmfileDir := filepath.Dir(helmfilePath)
-
-	if _, err := os.Stat(helmfilePath); err != nil {
-		fatal("SLIT helmfile not found — run 'runslit init'")
+	if cfg.DevstackLabel == "" {
+		fatal("not configured — run 'runslit config' first")
 	}
 
-	info(fmt.Sprintf(
-		"Deploying SLIT (%s) with label '%s'",
-		cfg.SlitEnv,
-		cfg.DevstackLabel,
-	))
-
-	err = runCommand(
-		helmfileDir,
-		"helmfile",
-		"-f", SlitHelmfileName,
-		"sync",
-	)
+	releases, err := selectReleases("Select releases to deploy")
 	if err != nil {
-		fatal("helmfile apply failed")
+		fatal(err.Error())
+	}
+	if len(releases) == 0 {
+		fmt.Println("No releases selected.")
+		return
 	}
 
-	success("SLIT environment deployed successfully")
-}
+	label := cfg.DevstackLabel
 
-// helper func ...
-func runCommand(dir, name string, args ...string) error {
-	cmd := exec.Command(name, args...)
-	cmd.Dir = dir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = os.Stdin
+	for _, rel := range releases {
+		switch rel {
+		case releaseNBPlus:
+			img := cfg.NBPlusImage
+			if img == "" {
+				fatal("payments-nbplus image not set — run 'runslit config' or pass --image <sha>")
+			}
+			info(fmt.Sprintf("Deploying %s-%s", rel, label))
+			err = runCommand(".",
+				"helm", "upgrade", "--install",
+				rel+"-"+label,
+				chartPath(kubePath, NBPlusChartPath),
+				"--namespace", NBPlusNamespace,
+				"--set", "devstack_label="+label,
+				"--set", "payments_nbplus_live_app_env=slit",
+				"--set", "payments_nbplus_test_app_env=slit",
+				"--set", "image="+img,
+				"--set", "create_pg_ledger_acknowledgment_worker=false",
+				"--set", "create_outbox_relay_worker=false",
+				"--set", "create_sqs_recon_worker=false",
+				"--set", "ephemeral_db=false",
+				"--wait",
+				"--timeout", "200s",
+			)
+			if err != nil {
+				fatal("helm upgrade failed for " + rel)
+			}
+			success(rel + " deployed")
 
-	return cmd.Run()
+		case releaseMockGW:
+			img := cfg.MockGWImage
+			if img == "" {
+				fatal("mock-go image not set — run 'runslit config'")
+			}
+			info(fmt.Sprintf("Deploying %s-%s", rel, label))
+			err = runCommand(".",
+				"helm", "upgrade", "--install",
+				rel+"-"+label,
+				chartPath(kubePath, MockGWChartPath),
+				"--namespace", MockGWNamespace,
+				"--set", "devstack_label="+label,
+				"--set", "image="+img,
+				"--wait",
+				"--timeout", "200s",
+			)
+			if err != nil {
+				fatal("helm upgrade failed for " + rel)
+			}
+			success(rel + " deployed")
+		}
+	}
+
+	fmt.Println()
+	success("Done")
 }

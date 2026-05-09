@@ -53,17 +53,21 @@ go install github.com/rxj18/runslit@latest
 git clone https://github.com/rxj18/runslit.git
 cd runslit
 go build -o runslit .
-sudo mv runslit /usr/local/bin/
+mkdir -p ~/.local/bin
+mv runslit ~/.local/bin/
+export PATH="$PATH:$HOME/.local/bin"  # Add to your shell profile
 ```
 
 ### Custom Installation Directory
 
+The default installation directory is `~/.local/bin`. To install to a different location:
+
 ```bash
-# Install to a custom directory
-INSTALL_DIR=$HOME/.local/bin ./install.sh
+# Install to /usr/local/bin
+INSTALL_DIR=/usr/local/bin ./install.sh
 
 # Or with Make
-make install INSTALL_DIR=$HOME/.local/bin
+make install INSTALL_DIR=/usr/local/bin
 ```
 
 ## Prerequisites
@@ -161,8 +165,9 @@ Runs: `DEVSTACK_LABEL=your-label go test -v -run TestNetBankingPayment/TestVerif
 make uninstall
 
 # Or manually
-sudo rm /usr/local/bin/runslit
+rm ~/.local/bin/runslit
 rm ~/.runslit.config
+rm -rf ~/.runslit  # Optional: remove installation directory
 ```
 
 ## Development
@@ -189,16 +194,22 @@ make clean
 
 ### Command not found after installation
 
-Make sure `/usr/local/bin` is in your PATH:
+Make sure `~/.local/bin` is in your PATH:
 
 ```bash
-echo $PATH | grep /usr/local/bin
+echo $PATH | grep "$HOME/.local/bin"
 ```
 
-If not, add it to your shell profile:
+If not, add it to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.):
 
 ```bash
-export PATH="$PATH:/usr/local/bin"
+export PATH="$PATH:$HOME/.local/bin"
+```
+
+Then reload your shell:
+
+```bash
+source ~/.bashrc  # or ~/.zshrc
 ```
 
 ### Permission denied

@@ -1,57 +1,51 @@
 package internal
 
-import (
-	"fmt"
-	"os"
-)
+import "fmt"
 
 func ShowStatus() {
-	printBanner()
 
-	fmt.Printf("%sGlobal Configuration:%s\n", Blue, Reset)
+	fmt.Printf("%sConfiguration:%s\n", Blue, Reset)
 
 	cfg, err := loadConfig()
 	if err != nil {
-		fatal("failed to load global config")
+		fatal("failed to load config")
 	}
 
 	kubePath := cfg.KubeManifestsPath
 	if kubePath == "" {
-		fmt.Printf("%s✗ kube-manifests path not configured%s\n\n", Red, Reset)
-		fmt.Println("Run 'runslit config' to set it.")
+		fmt.Printf("%s  ✗ not configured%s\n\n", Red, Reset)
+		fmt.Println("  Run 'runslit config' to get started.")
 		return
 	}
 
 	fmt.Printf("  kube-manifests: %s\n", kubePath)
-	fmt.Printf("  Config file:    %s\n", ConfigFile)
+	fmt.Printf("  config file:    %s\n", ConfigFile)
 
-	// Validate kube path (reuses already loaded config)
 	if _, err := validateKubePath(kubePath); err != nil {
-		fmt.Println()
-		fmt.Printf("%s✗ %s%s\n", Red, err.Error(), Reset)
+		fmt.Printf("%s  ✗ %s%s\n", Red, err.Error(), Reset)
 		return
 	}
 
 	fmt.Println()
-	fmt.Printf("%sSLIT Configuration:%s\n", Blue, Reset)
+	fmt.Printf("%sSLIT:%s\n", Blue, Reset)
 
-	slitEnv := cfg.SlitEnv
-	devstackLabel := cfg.DevstackLabel
-
-	if slitEnv == "" || devstackLabel == "" {
-		fmt.Printf("%s→ No SLIT environment initialized.%s\n", Yellow, Reset)
-		fmt.Println("Run 'runslit init' to initialize.")
+	if cfg.DevstackLabel == "" {
+		fmt.Printf("%s  → not configured — run 'runslit config'%s\n", Yellow, Reset)
 		return
 	}
 
-	fmt.Printf("  Environment:    %s\n", slitEnv)
-	fmt.Printf("  Devstack Label: %s\n", devstackLabel)
-	fmt.Println()
+	fmt.Printf("  devstack label: %s\n", cfg.DevstackLabel)
 
-	helmfilePath := getHelmfilePath(kubePath)
-	if _, err := os.Stat(helmfilePath); err == nil {
-		fmt.Printf("%s✓ SLIT helmfile exists%s\n", Green, Reset)
+	fmt.Println()
+	fmt.Printf("%sImages:%s\n", Blue, Reset)
+	printImage("payments-nbplus", cfg.NBPlusImage)
+	printImage("mock-go        ", cfg.MockGWImage)
+}
+
+func printImage(name, image string) {
+	if image != "" {
+		fmt.Printf("  %s: %s\n", name, image)
 	} else {
-		fmt.Printf("%s→ SLIT helmfile not found%s\n", Yellow, Reset)
+		fmt.Printf("  %s: %s(not set)%s\n", name, Yellow, Reset)
 	}
 }

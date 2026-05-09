@@ -10,9 +10,10 @@ import (
 // Config represents the runslit configuration
 type Config struct {
 	KubeManifestsPath string `json:"kube_manifests_path,omitempty"`
-	RunslitInstallDir string `json:"runslit_install_dir,omitempty"`
-	SlitEnv           string `json:"slit_env,omitempty"`
 	DevstackLabel     string `json:"devstack_label,omitempty"`
+	NBPlusImage       string `json:"nbplus_image,omitempty"`
+	MockGWImage       string `json:"mockgw_image,omitempty"`
+	LastTest          string `json:"last_test,omitempty"`
 }
 
 var (

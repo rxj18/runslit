@@ -15,11 +15,11 @@ func main() {
 		return
 	}
 
-	switch strings.ToLower(strings.TrimSpace(args[0])) {
+	cmd := strings.ToLower(strings.TrimSpace(args[0]))
+
+	switch cmd {
 	case "config":
 		internal.Configure()
-	case "init":
-		internal.Initiate()
 	case "status":
 		internal.ShowStatus()
 	case "sync":
@@ -35,5 +35,4 @@ func main() {
 		internal.ShowHelp()
 		os.Exit(1)
 	}
-
 }

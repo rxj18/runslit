@@ -1,36 +1,42 @@
 package internal
 
-import (
-	"os"
-	"path/filepath"
-)
+import "fmt"
 
 func Delete() {
-	printBanner()
 
-	kubePath, err := checkKubePath()
+	cfg, err := loadConfig()
 	if err != nil {
 		fatal(err.Error())
 	}
 
-	helmfilePath := getHelmfilePath(kubePath)
-	helmfileDir := filepath.Dir(helmfilePath)
-
-	if _, err := os.Stat(helmfilePath); err != nil {
-		fatal("SLIT helmfile not found")
+	if cfg.DevstackLabel == "" {
+		fatal("not configured — run 'runslit config' first")
 	}
 
-	info("Destroying SLIT environment...")
-
-	err = runCommand(
-		helmfileDir,
-		"helmfile",
-		"-f", SlitHelmfileName,
-		"destroy",
-	)
+	releases, err := selectReleases("Select releases to destroy")
 	if err != nil {
-		fatal("helmfile destroy failed")
+		fatal(err.Error())
+	}
+	if len(releases) == 0 {
+		fmt.Println("No releases selected.")
+		return
 	}
 
-	success("SLIT environment destroyed")
+	label := cfg.DevstackLabel
+
+	for _, rel := range releases {
+		info(fmt.Sprintf("Uninstalling %s-%s", rel, label))
+		ns := NBPlusNamespace
+		if rel == releaseMockGW {
+			ns = MockGWNamespace
+		}
+		err = runCommand(".", "helm", "uninstall", rel+"-"+label, "--namespace", ns)
+		if err != nil {
+			fatal("helm uninstall failed for " + rel)
+		}
+		success(rel + " uninstalled")
+	}
+
+	fmt.Println()
+	success("Done")
 }

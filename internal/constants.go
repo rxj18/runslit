@@ -6,6 +6,13 @@ import (
 )
 
 const (
+	NBPlusChartPath  = "helmfile/charts/payments-nbplus"
+	MockGWChartPath  = "helmfile/charts/mock-gateway"
+	NBPlusNamespace  = "payments-nbplus"
+	MockGWNamespace  = "perf"
+)
+
+const (
 	Red    = "\033[0;31m"
 	Green  = "\033[0;32m"
 	Yellow = "\033[1;33m"
@@ -15,6 +22,5 @@ const (
 )
 
 var (
-	ConfigFile       = filepath.Join(os.Getenv("HOME"), ".runslit.config")
-	SlitHelmfileName = "helmfile-slit.yaml.gotmpl"
+	ConfigFile = filepath.Join(os.Getenv("HOME"), ".runslit.config")
 )

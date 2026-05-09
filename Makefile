@@ -1,7 +1,7 @@
 .PHONY: build install uninstall clean test help
 
 BINARY_NAME=runslit
-INSTALL_DIR=/usr/local/bin
+INSTALL_DIR=$(HOME)/.local/bin
 
 build:
 	@echo "Building $(BINARY_NAME)..."
@@ -10,13 +10,18 @@ build:
 
 install: build
 	@echo "Installing $(BINARY_NAME) to $(INSTALL_DIR)..."
-	@sudo mv $(BINARY_NAME) $(INSTALL_DIR)/$(BINARY_NAME)
-	@sudo chmod +x $(INSTALL_DIR)/$(BINARY_NAME)
+	@mkdir -p $(INSTALL_DIR)
+	@cp $(BINARY_NAME) $(INSTALL_DIR)/$(BINARY_NAME)
+	@chmod +x $(INSTALL_DIR)/$(BINARY_NAME)
 	@echo "✓ Installed: $(INSTALL_DIR)/$(BINARY_NAME)"
+	@if ! echo $$PATH | grep -q "$(INSTALL_DIR)"; then \
+		echo "⚠️  $(INSTALL_DIR) is not in your PATH"; \
+		echo "→ Add to your shell profile: export PATH=\"\$$PATH:$(INSTALL_DIR)\""; \
+	fi
 
 uninstall:
 	@echo "Removing $(BINARY_NAME) from $(INSTALL_DIR)..."
-	@sudo rm -f $(INSTALL_DIR)/$(BINARY_NAME)
+	@rm -f $(INSTALL_DIR)/$(BINARY_NAME)
 	@echo "✓ Uninstalled"
 
 clean:
