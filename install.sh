@@ -94,13 +94,13 @@ fi
 
 echo -e "${YELLOW}→ Building...${NC}"
 cd "$BUILD_DIR"
-if ! go build -o "$TMP_DIR/$BINARY_NAME" .; then
+if ! go build -o "./$BINARY_NAME" .; then
     echo -e "${RED}✗ Build failed${NC}"
     exit 1
 fi
 
 mkdir -p "$INSTALL_DIR"
-cp "$TMP_DIR/$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
+cp "./$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
 chmod +x "$INSTALL_DIR/$BINARY_NAME"
 
 echo ""
